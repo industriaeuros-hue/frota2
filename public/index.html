@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euros Frota - Sistema de Gestão de Veículos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-zinc-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Header / Navbar -->
+    <header class="bg-black text-white shadow-md sticky top-0 z-30 border-b border-orange-600/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5 shadow border border-orange-500">
+                    <img src="Logo.png" alt="Logo Euros Aço" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=100&auto=format&fit=crop&q=60';">
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none tracking-wide text-white">Euros <span class="text-orange-500">Frota</span></h1>
+                    <span class="text-xs text-slate-400">Euros Aço & Logística</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <!-- Botão da Lixeira -->
+                <button onclick="openTrashModal()" class="flex items-center space-x-1.5 bg-zinc-900 hover:bg-zinc-800 text-slate-300 hover:text-orange-400 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg border border-zinc-800 transition relative" title="Lixeira">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Lixeira</span>
+                    <span id="trashBadge" class="bg-orange-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full hidden">0</span>
+                </button>
+                <button onclick="openVehicleModal()" class="flex items-center space-x-1 bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg shadow transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Novo Veículo</span>
+                </button>
+                <!-- Modo Noturno Discreto -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-slate-400 hover:text-orange-400 border border-zinc-800 transition" title="Alternar Tema">
+                    <i data-lucide="moon" id="darkModeIcon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+        <!-- KPI Dashboard -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total de Veículos</p>
+                    <p id="kpiTotal" class="text-2xl font-bold text-slate-800 dark:text-white mt-1">0</p>
+                </div>
+                <div class="p-3 bg-orange-50 dark:bg-zinc-800 text-orange-600 dark:text-orange-400 rounded-lg">
+                    <i data-lucide="car" class="w-6 h-6"></i>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Ativos em Operação</p>
+                    <p id="kpiActive" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">0</p>
+                </div>
+                <div class="p-3 bg-emerald-50 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Em Manutenção</p>
+                    <p id="kpiMaintenance" class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">0</p>
+                </div>
+                <div class="p-3 bg-amber-50 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 rounded-lg">
+                    <i data-lucide="wrench" class="w-6 h-6"></i>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Quilometragem Média</p>
+                    <p id="kpiAvgKm" class="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">0 km</p>
+                </div>
+                <div class="p-3 bg-orange-50 dark:bg-zinc-800 text-orange-600 dark:text-orange-400 rounded-lg">
+                    <i data-lucide="gauge" class="w-6 h-6"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search & Expanded Filters -->
+        <section class="bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 space-y-3">
+            <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative w-full md:w-80">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                    <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar placa, modelo, motorista, local..." class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                
+                <!-- Filters Group -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <select id="statusFilter" onchange="applyFilters()" class="text-sm border border-slate-300 dark:border-zinc-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100">
+                        <option value="ALL">Todos os Status</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Em Manutenção">Em Manutenção</option>
+                        <option value="Inativo">Inativo</option>
+                    </select>
+
+                    <select id="brandFilter" onchange="applyFilters()" class="text-sm border border-slate-300 dark:border-zinc-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100">
+                        <option value="ALL">Todas as Marcas</option>
+                    </select>
+
+                    <select id="locationFilter" onchange="applyFilters()" class="text-sm border border-slate-300 dark:border-zinc-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100">
+                        <option value="ALL">Todas as Localizações</option>
+                    </select>
+
+                    <select id="sortFilter" onchange="applyFilters()" class="text-sm border border-slate-300 dark:border-zinc-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100">
+                        <option value="plate">Placa (A-Z)</option>
+                        <option value="recent">Mais Recentes</option>
+                        <option value="km_desc">Maior KM</option>
+                        <option value="km_asc">Menor KM</option>
+                    </select>
+
+                    <div class="flex border border-slate-300 dark:border-zinc-700 rounded-lg overflow-hidden bg-slate-50 dark:bg-zinc-800">
+                        <button id="viewCardsBtn" onclick="toggleView('cards')" class="p-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-700 shadow-sm hover:bg-slate-100 dark:hover:bg-zinc-600 transition">
+                            <i data-lucide="grid" class="w-4 h-4"></i>
+                        </button>
+                        <button id="viewTableBtn" onclick="toggleView('table')" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition">
+                            <i data-lucide="list" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vehicle List Container -->
+        <section>
+            <div id="cardsView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="tableView" class="hidden bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                    <thead class="bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-zinc-700">
+                        <tr>
+                            <th class="p-3">Veículo</th>
+                            <th class="p-3">Placa</th>
+                            <th class="p-3">Motorista</th>
+                            <th class="p-3">Localidade</th>
+                            <th class="p-3">KM</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100 dark:divide-zinc-800"></tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="hidden text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-dashed border-slate-300 dark:border-zinc-800">
+                <i data-lucide="truck" class="w-12 h-12 text-slate-300 dark:text-zinc-700 mx-auto mb-2"></i>
+                <p class="text-slate-500 dark:text-slate-400 font-medium">Nenhum veículo encontrado.</p>
+                <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Tente ajustar os filtros de busca ou cadastre um novo veículo.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Cadastrar/Editar Veículo -->
+    <div id="vehicleModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-800">
+            <div class="px-6 py-4 bg-slate-50 dark:bg-zinc-800 border-b border-slate-200 dark:border-zinc-700 flex justify-between items-center">
+                <h3 id="vehicleModalTitle" class="font-bold text-slate-800 dark:text-white">Cadastrar Veículo</h3>
+                <button onclick="closeVehicleModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="vehicleForm" onsubmit="saveVehicle(event)" class="p-6 overflow-y-auto space-y-4 custom-scrollbar">
+                <input type="hidden" id="vehicleId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Placa *</label>
+                        <input type="text" id="vPlate" required placeholder="ABC-1234" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Status *</label>
+                        <select id="vStatus" required class="w-full border border-slate-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white">
+                            <option value="Ativo">Ativo</option>
+                            <option value="Em Manutenção">Em Manutenção</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Marca *</label>
+                        <input type="text" id="vBrand" required placeholder="Ex: Volvo, Scania..." class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Modelo *</label>
+                        <input type="text" id="vModel" required placeholder="Ex: FH 540..." class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Ano *</label>
+                        <input type="number" id="vYear" required min="1980" max="2030" placeholder="2022" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">KM Atual *</label>
+                        <input type="number" id="vKm" required min="0" placeholder="120000" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Motorista Responsável</label>
+                        <input type="text" id="vDriver" placeholder="Nome do motorista" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Localização Base</label>
+                        <input type="text" id="vLocation" placeholder="Ex: Pátio Principal / Cidade" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+                <div class="pt-4 flex justify-end space-x-2 border-t border-slate-100 dark:border-zinc-800">
+                    <button type="button" onclick="closeVehicleModal()" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow transition">Salvar Veículo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes & Histórico -->
+    <div id="historyModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-3xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-800">
+            <div class="px-6 py-4 bg-black text-white flex justify-between items-center border-b border-orange-600/30">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-orange-600/20 rounded-lg text-orange-400 border border-orange-500/30">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 id="histTitle" class="font-bold text-base leading-tight">Histórico do Veículo</h3>
+                        <p id="histSubtitle" class="text-xs text-slate-300">Placa: - | KM: -</p>
+                    </div>
+                </div>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar flex-1 bg-slate-50 dark:bg-zinc-950">
+                <!-- Add/Edit Event Card -->
+                <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 id="eventFormTitle" class="font-semibold text-slate-800 dark:text-white text-sm flex items-center space-x-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4 text-orange-600"></i>
+                            <span>Alimentar Histórico / Registrar Evento</span>
+                        </h4>
+                        <button id="cancelEditEventBtn" type="button" onclick="cancelEditEvent()" class="hidden text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-medium">
+                            Cancelar Edição
+                        </button>
+                    </div>
+                    <form id="eventForm" onsubmit="saveHistoryEvent(event)" class="space-y-3">
+                        <input type="hidden" id="eventId">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Tipo de Evento *</label>
+                                <select id="eType" required onchange="handleEventTypeChange()" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500">
+                                    <option value="Saída para Entrega">🚚 Saída para Entrega (Logística)</option>
+                                    <option value="Compra de Peça">🔧 Compra de Peça</option>
+                                    <option value="Manutenção / Revisão">🛠️ Manutenção / Revisão</option>
+                                    <option value="Abastecimento">⛽ Abastecimento</option>
+                                    <option value="Troca de Motorista/Local">👤 Troca de Motorista/Local</option>
+                                    <option value="Outro">📌 Outro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Data *</label>
+                                <input type="date" id="eDate" required class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">KM Atual no Momento</label>
+                                <input type="number" id="eKm" min="0" placeholder="Ex: 120500" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500">
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Fields Container -->
+                        <div id="dynamicFields" class="space-y-3 p-3 bg-slate-50 dark:bg-zinc-800/50 rounded-lg border border-slate-200 dark:border-zinc-800"></div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Descrição / Observações *</label>
+                            <textarea id="eDesc" required rows="2" placeholder="Detalhe a operação, modelo/código das peças ou observações do transporte..." class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-orange-500"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" id="submitEventBtn" class="bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow flex items-center space-x-1">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>Adicionar ao Histórico</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Timeline & Category Tabs -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-slate-800 dark:text-white text-sm">Linha do Tempo de Registros</h4>
+                    </div>
+                    
+                    <!-- Abas de Filtro do Histórico -->
+                    <div id="historyTabs" class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="setHistoryTab('ALL')" class="px-3 py-1 text-xs font-semibold rounded-lg bg-orange-600 text-white transition tab-btn shadow-sm" data-tab="ALL">Geral (Todos)</button>
+                        <button onclick="setHistoryTab('Saída para Entrega')" class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 transition tab-btn" data-tab="Saída para Entrega">🚚 Entregas</button>
+                        <button onclick="setHistoryTab('Manutencao')" class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 transition tab-btn" data-tab="Manutencao">🛠️ Manutenção / Peças</button>
+                        <button onclick="setHistoryTab('Abastecimento')" class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 transition tab-btn" data-tab="Abastecimento">⛽ Abastecimento</button>
+                    </div>
+
+                    <div id="timelineContainer" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-zinc-800"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lixeira -->
+    <div id="trashModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-3xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-800">
+            <div class="px-6 py-4 bg-zinc-900 text-white flex justify-between items-center border-b border-zinc-800">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-red-500/10 rounded-lg text-red-500 border border-red-500/20">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base leading-tight text-white">Lixeira do Sistema</h3>
+                        <p class="text-xs text-slate-400">Itens excluídos temporariamente (podem ser restaurados)</p>
+                    </div>
+                </div>
+                <button onclick="closeTrashModal()" class="text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1 bg-slate-50 dark:bg-zinc-950">
+                <div id="trashList" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão de Veículo -->
+    <div id="deleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-xl shadow-xl overflow-hidden p-6 text-center space-y-4 border border-zinc-800">
+            <div class="w-12 h-12 bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 dark:text-white text-base">Enviar Veículo para Lixeira?</h3>
+                <p id="deleteModalText" class="text-xs text-slate-500 dark:text-slate-400 mt-1">O veículo será movido para a lixeira. Você poderá restaurá-lo a qualquer momento.</p>
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="closeDeleteModal()" class="w-1/2 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition">Cancelar</button>
+                <button onclick="executeDeleteVehicle()" class="w-1/2 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-500 transition shadow">Mover p/ Lixeira</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão de Evento -->
+    <div id="deleteEventModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-xl shadow-xl overflow-hidden p-6 text-center space-y-4 border border-zinc-800">
+            <div class="w-12 h-12 bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 dark:text-white text-base">Enviar Evento para Lixeira?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Este registro do histórico será removido e guardado na lixeira.</p>
+            </div>
+            <div class="flex space-x-2 pt-2">
+                <button onclick="closeDeleteEventModal()" class="w-1/2 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition">Cancelar</button>
+                <button onclick="executeDeleteEvent()" class="w-1/2 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-500 transition shadow">Mover p/ Lixeira</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-zinc-900 text-white border border-zinc-800 px-4 py-3 rounded-lg shadow-lg hidden items-center space-x-2 text-xs z-50 transition-all transform">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-orange-500"></i>
+        <span id="toastMsg">Operação realizada!</span>
+    </div>
+
+    <!-- App Logic -->
+    <script>
+        // State Management
+        let vehicles = [];
+        let trash = []; // Lixeira de veículos e eventos
+        let currentVehicleId = null;
+        let vehicleToDeleteId = null;
+        let eventToDeleteId = null;
+        let currentView = 'cards';
+        let isDarkMode = false;
+        let currentHistoryTab = 'ALL';
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', async () => {
+            const savedTheme = localStorage.getItem('euros_theme');
+            if (savedTheme === 'dark') {
+                isDarkMode = true;
+                document.documentElement.classList.add('dark');
+            }
+            updateThemeUI();
+
+            await loadStorage();
+            populateDynamicFilters();
+            render();
+            updateTrashBadge();
+            handleEventTypeChange();
+            lucide.createIcons();
+        });
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('euros_theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('euros_theme', 'light');
+            }
+            updateThemeUI();
+        }
+
+        function updateThemeUI() {
+            const icon = document.getElementById('darkModeIcon');
+            if (isDarkMode) {
+                icon.setAttribute('data-lucide', 'sun');
+            } else {
+                icon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        }
+
+        async function loadStorage() {
+            try {
+                const response = await fetch('/api/vehicles');
+                const data = await response.json();
+                
+                let serverVehicles = [];
+                let serverTrash = [];
+                
+                if (Array.isArray(data)) {
+                    serverVehicles = data;
+                } else {
+                    serverVehicles = data.vehicles || [];
+                    serverTrash = data.trash || [];
+                }
+
+                // Se o servidor estiver vazio, recupera do navegador e migra para o Supabase
+                if (serverVehicles.length === 0) {
+                    const localData = localStorage.getItem('euros_vehicles') || localStorage.getItem('vehicles') || localStorage.getItem('frota_data');
+                    if (localData) {
+                        try {
+                            const parsed = JSON.parse(localData);
+                            vehicles = Array.isArray(parsed) ? parsed : (parsed.vehicles || []);
+                            trash = Array.isArray(parsed) ? [] : (parsed.trash || []);
+                            await saveStorage(); // Salva na nuvem permanentemente
+                            console.log("Dados migrados do navegador para o Supabase com sucesso!");
+                            return;
+                        } catch (err) {
+                            console.error("Erro ao converter dados locais", err);
+                        }
+                    }
+                }
+
+                vehicles = serverVehicles;
+                trash = serverTrash;
+            } catch (e) {
+                console.error('Erro ao carregar dados do servidor:', e);
+                vehicles = [];
+                trash = [];
+            }
+        }
+
+        async function saveStorage() {
+            try {
+                await fetch('/api/vehicles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vehicles, trash })
+                });
+            } catch (e) {
+                console.error('Erro ao salvar dados no servidor:', e);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('hidden');
+            toast.classList.add('flex');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('flex');
+            }, 3000);
+        }
+
+        function updateTrashBadge() {
+            const badge = document.getElementById('trashBadge');
+            if (trash.length > 0) {
+                badge.innerText = trash.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function populateDynamicFilters() {
+            const brandSelect = document.getElementById('brandFilter');
+            const brands = [...new Set(vehicles.map(v => v.brand.trim()).filter(Boolean))].sort();
+            brandSelect.innerHTML = '<option value="ALL">Todas as Marcas</option>' + 
+                brands.map(b => `<option value="${b}">${b}</option>`).join('');
+
+            const locationSelect = document.getElementById('locationFilter');
+            const locations = [...new Set(vehicles.map(v => (v.location || '').trim()).filter(Boolean))].sort();
+            locationSelect.innerHTML = '<option value="ALL">Todas as Localizações</option>' + 
+                locations.map(l => `<option value="${l}">${l}</option>`).join('');
+        }
+
+        // Render Functions
+        function render() {
+            renderKPIs();
+            applyFilters();
+            updateTrashBadge();
+        }
+
+        function renderKPIs() {
+            document.getElementById('kpiTotal').innerText = vehicles.length;
+            document.getElementById('kpiActive').innerText = vehicles.filter(v => v.status === 'Ativo').length;
+            document.getElementById('kpiMaintenance').innerText = vehicles.filter(v => v.status === 'Em Manutenção').length;
+            
+            const totalKm = vehicles.reduce((sum, v) => sum + Number(v.km || 0), 0);
+            const avgKm = vehicles.length ? Math.round(totalKm / vehicles.length) : 0;
+            document.getElementById('kpiAvgKm').innerText = avgKm.toLocaleString('pt-BR') + ' km';
+        }
+
+        function cleanString(str) {
+            return (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function applyFilters() {
+            const rawQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+            const cleanQuery = cleanString(rawQuery);
+            const status = document.getElementById('statusFilter').value;
+            const brand = document.getElementById('brandFilter').value;
+            const location = document.getElementById('locationFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+
+            let filtered = vehicles.filter(v => {
+                const cleanPlate = cleanString(v.plate);
+                const matchesSearch = cleanPlate.includes(cleanQuery) ||
+                                     v.plate.toLowerCase().includes(rawQuery) ||
+                                     v.model.toLowerCase().includes(rawQuery) ||
+                                     v.brand.toLowerCase().includes(rawQuery) ||
+                                     (v.driver && v.driver.toLowerCase().includes(rawQuery)) ||
+                                     (v.location && v.location.toLowerCase().includes(rawQuery));
+                
+                const matchesStatus = status === 'ALL' || v.status === status;
+                const matchesBrand = brand === 'ALL' || v.brand.trim().toLowerCase() === brand.toLowerCase();
+                const matchesLocation = location === 'ALL' || (v.location || '').trim().toLowerCase() === location.toLowerCase();
+                
+                return matchesSearch && matchesStatus && matchesBrand && matchesLocation;
+            });
+
+            // Ordenação
+            filtered.sort((a, b) => {
+                if (sort === 'plate') return a.plate.localeCompare(b.plate);
+                if (sort === 'recent') return Number(b.id || 0) - Number(a.id || 0);
+                if (sort === 'km_desc') return Number(b.km || 0) - Number(a.km || 0);
+                if (sort === 'km_asc') return Number(a.km || 0) - Number(b.km || 0);
+                return 0;
+            });
+
+            renderViews(filtered);
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            const cardsBtn = document.getElementById('viewCardsBtn');
+            const tableBtn = document.getElementById('viewTableBtn');
+            const cardsView = document.getElementById('cardsView');
+            const tableView = document.getElementById('tableView');
+
+            if (view === 'cards') {
+                cardsBtn.className = 'p-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-700 shadow-sm hover:bg-slate-100 dark:hover:bg-zinc-600 transition';
+                tableBtn.className = 'p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition';
+                cardsView.classList.remove('hidden');
+                tableView.classList.add('hidden');
+            } else {
+                tableBtn.className = 'p-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-zinc-700 shadow-sm hover:bg-slate-100 dark:hover:bg-zinc-600 transition';
+                cardsBtn.className = 'p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition';
+                tableView.classList.remove('hidden');
+                cardsView.classList.add('hidden');
+            }
+            applyFilters();
+        }
+
+        function renderViews(list) {
+            const cardsView = document.getElementById('cardsView');
+            const tableBody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+
+            if (list.length === 0) {
+                cardsView.innerHTML = '';
+                tableBody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            // Cards Render
+            cardsView.innerHTML = list.map(v => `
+                <div class="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800 p-5 flex flex-col justify-between space-y-4 hover:border-orange-500/50 transition">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">${v.brand}</span>
+                                <h3 class="font-bold text-slate-800 dark:text-white text-base">${v.model} (${v.year})</h3>
+                            </div>
+                            <span class="px-2.5 py-1 text-[11px] font-semibold rounded-full ${v.status === 'Ativo' ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : v.status === 'Em Manutenção' ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-zinc-700'}">
+                                ${v.status}
+                            </span>
+                        </div>
+                        <div class="mt-3 flex items-center space-x-2 text-sm font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-zinc-800/50 p-2 rounded-lg border border-slate-200/60 dark:border-zinc-800">
+                            <i data-lucide="tag" class="w-4 h-4 text-orange-500"></i>
+                            <span>Placa: ${v.plate}</span>
+                        </div>
+                        <div class="mt-3 space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center space-x-1.5"><i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i><span>Motorista:</span></span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200">${v.driver || 'Não atribuído'}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center space-x-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i><span>Localização:</span></span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200">${v.location || 'Não informada'}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center space-x-1.5"><i data-lucide="gauge" class="w-3.5 h-3.5 text-slate-400"></i><span>Quilometragem:</span></span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200">${Number(v.km || 0).toLocaleString('pt-BR')} km</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between">
+                        <button onclick="openHistoryModal('${v.id}')" class="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline flex items-center space-x-1">
+                            <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                            <span>Histórico (${(v.history || []).length})</span>
+                        </button>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="editVehicle('${v.id}')" class="p-1.5 text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition" title="Editar">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="confirmDeleteVehicle('${v.id}')" class="p-1.5 text-slate-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition" title="Excluir">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Table Render
+            tableBody.innerHTML = list.map(v => `
+                <tr class="hover:bg-slate-50/50 dark:hover:bg-zinc-800/50 transition">
+                    <td class="p-3 font-medium text-slate-800 dark:text-white">
+                        <div>${v.brand} ${v.model}</div>
+                        <div class="text-xs text-slate-400">Ano: ${v.year}</div>
+                    </td>
+                    <td class="p-3 font-bold text-orange-600 dark:text-orange-400">${v.plate}</td>
+                    <td class="p-3">${v.driver || '-'}</td>
+                    <td class="p-3">${v.location || '-'}</td>
+                    <td class="p-3 font-medium">${Number(v.km || 0).toLocaleString('pt-BR')} km</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 text-[11px] font-semibold rounded-full ${v.status === 'Ativo' ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' : v.status === 'Em Manutenção' ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400'}">
+                            ${v.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right space-x-1">
+                        <button onclick="openHistoryModal('${v.id}')" class="p-1.5 text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg transition" title="Histórico">
+                            <i data-lucide="history" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="editVehicle('${v.id}')" class="p-1.5 text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg transition" title="Editar">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="confirmDeleteVehicle('${v.id}')" class="p-1.5 text-slate-500 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition" title="Excluir">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // Modals & Actions
+        function openVehicleModal(id = null) {
+            currentVehicleId = id;
+            const modal = document.getElementById('vehicleModal');
+            const title = document.getElementById('vehicleModalTitle');
+            const form = document.getElementById('vehicleForm');
+            form.reset();
+
+            if (id) {
+                title.innerText = 'Editar Veículo';
+                const v = vehicles.find(item => item.id === id);
+                if (v) {
+                    document.getElementById('vehicleId').value = v.id;
+                    document.getElementById('vPlate').value = v.plate;
+                    document.getElementById('vStatus').value = v.status;
+                    document.getElementById('vBrand').value = v.brand;
+                    document.getElementById('vModel').value = v.model;
+                    document.getElementById('vYear').value = v.year;
+                    document.getElementById('vKm').value = v.km;
+                    document.getElementById('vDriver').value = v.driver || '';
+                    document.getElementById('vLocation').value = v.location || '';
+                }
+            } else {
+                title.innerText = 'Cadastrar Veículo';
+                document.getElementById('vehicleId').value = '';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeVehicleModal() {
+            const modal = document.getElementById('vehicleModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function saveVehicle(e) {
+            e.preventDefault();
+            const id = document.getElementById('vehicleId').value;
+            const vehicleData = {
+                id: id ? id : Date.now().toString(),
+                plate: document.getElementById('vPlate').value.toUpperCase().trim(),
+                status: document.getElementById('vStatus').value,
+                brand: document.getElementById('vBrand').value.trim(),
+                model: document.getElementById('vModel').value.trim(),
+                year: Number(document.getElementById('vYear').value),
+                km: Number(document.getElementById('vKm').value),
+                driver: document.getElementById('vDriver').value.trim(),
+                location: document.getElementById('vLocation').value.trim(),
+                history: []
+            };
+
+            if (id) {
+                const index = vehicles.findIndex(v => v.id === id);
+                if (index !== -1) {
+                    vehicleData.history = vehicles[index].history || [];
+                    vehicles[index] = vehicleData;
+                }
+            } else {
+                vehicles.push(vehicleData);
+            }
+
+            await saveStorage();
+            closeVehicleModal();
+            populateDynamicFilters();
+            render();
+            showToast('Veículo salvo com sucesso!');
+        }
+
+        function editVehicle(id) {
+            openVehicleModal(id);
+        }
+
+        function confirmDeleteVehicle(id) {
+            vehicleToDeleteId = id;
+            const modal = document.getElementById('deleteModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            vehicleToDeleteId = null;
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function executeDeleteVehicle() {
+            if (!vehicleToDeleteId) return;
+            const index = vehicles.findIndex(v => v.id === vehicleToDeleteId);
+            if (index !== -1) {
+                const removed = vehicles.splice(index, 1)[0];
+                trash.push({ type: 'vehicle', data: removed, deletedAt: new Date().toISOString() });
+                await saveStorage();
+                populateDynamicFilters();
+                render();
+                showToast('Veículo movido para a lixeira.');
+            }
+            closeDeleteModal();
+        }
+
+        // History Modal & Events
+        function openHistoryModal(vehicleId) {
+            currentVehicleId = vehicleId;
+            const v = vehicles.find(item => item.id === vehicleId);
+            if (!v) return;
+
+            document.getElementById('histTitle').innerText = `${v.brand} ${v.model}`;
+            document.getElementById('histSubtitle').innerText = `Placa: ${v.plate} | KM: ${Number(v.km || 0).toLocaleString('pt-BR')}`;
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            document.getElementById('cancelEditEventBtn').classList.add('hidden');
+            document.getElementById('submitEventBtn').innerHTML = '<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Adicionar ao Histórico</span>';
+            
+            document.getElementById('eKm').value = v.km || '';
+            document.getElementById('eDate').value = new Date().toISOString().split('T')[0];
+
+            handleEventTypeChange();
+            renderTimeline();
+
+            const modal = document.getElementById('historyModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentVehicleId = null;
+        }
+
+        function handleEventTypeChange() {
+            const type = document.getElementById('eType').value;
+            const container = document.getElementById('dynamicFields');
+            
+            if (type === 'Saída para Entrega') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Motorista</label>
+                            <input type="text" id="evDriver" placeholder="Nome do motorista" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Destino / Local</label>
+                            <input type="text" id="evDestination" placeholder="Local de entrega" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs">
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'Compra de Peça' || type === 'Manutenção / Revisão') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Peça / Serviço</label>
+                            <input type="text" id="evPart" placeholder="Ex: Pneu, Óleo, Pastilha..." class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Custo (R$)</label>
+                            <input type="number" step="0.01" id="evCost" placeholder="0.00" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs">
+                        </div>
+                    </div>
+                `;
+            } else if (type === 'Abastecimento') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Litros (L)</label>
+                            <input type="number" step="0.01" id="evLiters" placeholder="0.00" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Valor Total (R$)</label>
+                            <input type="number" step="0.01" id="evTotalCost" placeholder="0.00" class="w-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs">
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        async function saveHistoryEvent(e) {
+            e.preventDefault();
+            if (!currentVehicleId) return;
+            const v = vehicles.find(item => item.id === currentVehicleId);
+            if (!v) return;
+
+            const eventId = document.getElementById('eventId').value;
+            const type = document.getElementById('eType').value;
+            const date = document.getElementById('eDate').value;
+            const km = Number(document.getElementById('eKm').value || 0);
+            const description = document.getElementById('eDesc').value;
+
+            const eventData = {
+                id: eventId ? eventId : Date.now().toString(),
+                type,
+                date,
+                km,
+                description,
+                extra: {}
+            };
+
+            if (type === 'Saída para Entrega') {
+                eventData.extra = {
+                    driver: document.getElementById('evDriver')?.value || '',
+                    destination: document.getElementById('evDestination')?.value || ''
+                };
+                if (eventData.extra.driver) v.driver = eventData.extra.driver;
+                if (eventData.extra.destination) v.location = eventData.extra.destination;
+            } else if (type === 'Compra de Peça' || type === 'Manutenção / Revisão') {
+                eventData.extra = {
+                    part: document.getElementById('evPart')?.value || '',
+                    cost: document.getElementById('evCost')?.value || ''
+                };
+            } else if (type === 'Abastecimento') {
+                eventData.extra = {
+                    liters: document.getElementById('evLiters')?.value || '',
+                    totalCost: document.getElementById('evTotalCost')?.value || ''
+                };
+            }
+
+            if (km > (v.km || 0)) {
+                v.km = km;
+            }
+
+            if (!v.history) v.history = [];
+
+            if (eventId) {
+                const idx = v.history.findIndex(ev => ev.id === eventId);
+                if (idx !== -1) v.history[idx] = eventData;
+            } else {
+                v.history.unshift(eventData);
+            }
+
+            await saveStorage();
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            document.getElementById('cancelEditEventBtn').classList.add('hidden');
+            document.getElementById('submitEventBtn').innerHTML = '<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Adicionar ao Histórico</span>';
+            document.getElementById('eDate').value = new Date().toISOString().split('T')[0];
+            handleEventTypeChange();
+            renderTimeline();
+            render();
+            showToast('Evento registrado com sucesso!');
+        }
+
+        function setHistoryTab(tab) {
+            currentHistoryTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tab) {
+                    btn.className = 'px-3 py-1 text-xs font-semibold rounded-lg bg-orange-600 text-white transition tab-btn shadow-sm';
+                } else {
+                    btn.className = 'px-3 py-1 text-xs font-semibold rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-slate-300 transition tab-btn';
+                }
+            });
+            renderTimeline();
+        }
+
+        function renderTimeline() {
+            const v = vehicles.find(item => item.id === currentVehicleId);
+            const container = document.getElementById('timelineContainer');
+            if (!v || !v.history || v.history.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhum evento registrado no histórico deste veículo.</p>';
+                return;
+            }
+
+            let filteredHistory = v.history;
+            if (currentHistoryTab === 'Manutencao') {
+                filteredHistory = v.history.filter(ev => ev.type === 'Manutenção / Revisão' || ev.type === 'Compra de Peça');
+            } else if (currentHistoryTab !== 'ALL') {
+                filteredHistory = v.history.filter(ev => ev.type === currentHistoryTab);
+            }
+
+            if (filteredHistory.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhum registro encontrado para esta categoria.</p>';
+                return;
+            }
+
+            container.innerHTML = filteredHistory.map(ev => `
+                <div class="relative pl-4 group">
+                    <div class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full bg-orange-600 border-2 border-white dark:border-zinc-950"></div>
+                    <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-2">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-orange-600 dark:text-orange-400">${ev.type}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[11px] text-slate-400">${ev.date.split('-').reverse().join('/')}</span>
+                                <button onclick="editHistoryEvent('${ev.id}')" class="text-slate-400 hover:text-orange-600 transition" title="Editar"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                                <button onclick="confirmDeleteEvent('${ev.id}')" class="text-slate-400 hover:text-red-600 transition" title="Excluir"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-700 dark:text-slate-300">${ev.description}</p>
+                        <div class="flex flex-wrap gap-3 pt-2 text-[11px] text-slate-500 border-t border-slate-100 dark:border-zinc-800">
+                            <span>📍 KM: ${Number(ev.km || 0).toLocaleString('pt-BR')}</span>
+                            ${ev.extra?.driver ? `<span>👤 Motorista: ${ev.extra.driver}</span>` : ''}
+                            ${ev.extra?.destination ? `<span>🎯 Destino: ${ev.extra.destination}</span>` : ''}
+                            ${ev.extra?.part ? `<span>🔧 Peça: ${ev.extra.part}</span>` : ''}
+                            ${ev.extra?.cost ? `<span>💰 Custo: R$ ${Number(ev.extra.cost).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>` : ''}
+                            ${ev.extra?.liters ? `<span>⛽ Litros: ${ev.extra.liters}L</span>` : ''}
+                            ${ev.extra?.totalCost ? `<span>💵 Total: R$ ${Number(ev.extra.totalCost).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function editHistoryEvent(eventId) {
+            const v = vehicles.find(item => item.id === currentVehicleId);
+            if (!v) return;
+            const ev = v.history.find(item => item.id === eventId);
+            if (!ev) return;
+
+            document.getElementById('eventId').value = ev.id;
+            document.getElementById('eType').value = ev.type;
+            handleEventTypeChange();
+
+            document.getElementById('eDate').value = ev.date;
+            document.getElementById('eKm').value = ev.km;
+            document.getElementById('eDesc').value = ev.description;
+
+            if (ev.type === 'Saída para Entrega') {
+                if (document.getElementById('evDriver')) document.getElementById('evDriver').value = ev.extra?.driver || '';
+                if (document.getElementById('evDestination')) document.getElementById('evDestination').value = ev.extra?.destination || '';
+            } else if (ev.type === 'Compra de Peça' || ev.type === 'Manutenção / Revisão') {
+                if (document.getElementById('evPart')) document.getElementById('evPart').value = ev.extra?.part || '';
+                if (document.getElementById('evCost')) document.getElementById('evCost').value = ev.extra?.cost || '';
+            } else if (ev.type === 'Abastecimento') {
+                if (document.getElementById('evLiters')) document.getElementById('evLiters').value = ev.extra?.liters || '';
+                if (document.getElementById('evTotalCost')) document.getElementById('evTotalCost').value = ev.extra?.totalCost || '';
+            }
+
+            document.getElementById('cancelEditEventBtn').classList.remove('hidden');
+            document.getElementById('submitEventBtn').innerHTML = '<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Salvar Alterações</span>';
+            lucide.createIcons();
+        }
+
+        function cancelEditEvent() {
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            document.getElementById('cancelEditEventBtn').classList.add('hidden');
+            document.getElementById('submitEventBtn').innerHTML = '<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Adicionar ao Histórico</span>';
+            document.getElementById('eDate').value = new Date().toISOString().split('T')[0];
+            handleEventTypeChange();
+        }
+
+        function confirmDeleteEvent(eventId) {
+            eventToDeleteId = eventId;
+            const modal = document.getElementById('deleteEventModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDeleteEventModal() {
+            eventToDeleteId = null;
+            const modal = document.getElementById('deleteEventModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function executeDeleteEvent() {
+            if (!currentVehicleId || !eventToDeleteId) return;
+            const v = vehicles.find(item => item.id === currentVehicleId);
+            if (!v || !v.history) return;
+
+            const index = v.history.findIndex(ev => ev.id === eventToDeleteId);
+            if (index !== -1) {
+                const removed = v.history.splice(index, 1)[0];
+                trash.push({ type: 'event', vehicleId: v.id, data: removed, deletedAt: new Date().toISOString() });
+                await saveStorage();
+                renderTimeline();
+                render();
+                showToast('Evento movido para a lixeira.');
+            }
+            closeDeleteEventModal();
+        }
+
+        // Trash Modal & Restoration
+        function openTrashModal() {
+            renderTrashList();
+            const modal = document.getElementById('trashModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTrashModal() {
+            const modal = document.getElementById('trashModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderTrashList() {
+            const container = document.getElementById('trashList');
+            if (!trash || trash.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-8">A lixeira está vazia.</p>';
+                return;
+            }
+
+            container.innerHTML = trash.map((item, index) => {
+                if (item.type === 'vehicle') {
+                    const v = item.data;
+                    return `
+                        <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-red-500 uppercase">Veículo Excluído</span>
+                                <h4 class="font-bold text-slate-800 dark:text-white text-sm">${v.brand} ${v.model} (${v.plate})</h4>
+                                <p class="text-xs text-slate-400">Excluído em: ${new Date(item.deletedAt).toLocaleString('pt-BR')}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="restoreFromTrash(${index})" class="px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg transition">Restaurar</button>
+                                <button onclick="permanentDelete(${index})" class="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-950/50 hover:bg-red-100 rounded-lg transition">Excluir Definitivamente</button>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'event') {
+                    const ev = item.data;
+                    return `
+                        <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-orange-500 uppercase">Evento do Histórico Excluído</span>
+                                <h4 class="font-bold text-slate-800 dark:text-white text-sm">${ev.type} - ${ev.date.split('-').reverse().join('/')}</h4>
+                                <p class="text-xs text-slate-400">${ev.description}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="restoreFromTrash(${index})" class="px-3 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 rounded-lg transition">Restaurar</button>
+                                <button onclick="permanentDelete(${index})" class="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-950/50 hover:bg-red-100 rounded-lg transition">Excluir Definitivamente</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+            lucide.createIcons();
+        }
+
+        async function restoreFromTrash(index) {
+            const item = trash.splice(index, 1)[0];
+            if (item.type === 'vehicle') {
+                vehicles.push(item.data);
+            } else if (item.type === 'event') {
+                const v = vehicles.find(vh => vh.id === item.vehicleId);
+                if (v) {
+                    if (!v.history) v.history = [];
+                    v.history.push(item.data);
+                    v.history.sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else {
+                    alert('Veículo original não encontrado para restaurar o evento.');
+                }
+            }
+            await saveStorage();
+            renderTrashList();
+            populateDynamicFilters();
+            render();
+            showToast('Item restaurado com sucesso!');
+        }
+
+        async function permanentDelete(index) {
+            if (confirm('Tem certeza que deseja excluir permanentemente? Esta ação não pode ser desfeita.')) {
+                trash.splice(index, 1);
+                await saveStorage();
+                renderTrashList();
+                showToast('Item excluído permanentemente.');
+            }
+        }
+    </script>
+</body>
+</html>
